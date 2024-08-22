@@ -1,0 +1,33 @@
+name: EC2'ye Dağıtım
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Kodu İndir
+      uses: actions/checkout@v2
+
+    - name: Dosyayı EC2'ye Kopyala
+      uses: appleboy/scp-action@v0.1.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_KEY }}
+        source: "index.nginx-debian.html"
+        target: "/home/ubuntu/"
+
+    - name: EC2'ye SSH ile Bağlan ve Dosyayı Taşı
+      uses: appleboy/ssh-action@v0.1.2
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_KEY }}
+        script: |
+          sudo mv /home/ubuntu/index.nginx-debian.html /var/www/html/index.nginx-debian.html
+          sudo systemctl restart nginx
