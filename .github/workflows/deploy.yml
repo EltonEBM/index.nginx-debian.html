@@ -31,3 +31,4 @@ jobs:
         script: |
           sudo mv /home/ubuntu/index.nginx-debian.html /var/www/html/index.nginx-debian.html
           sudo systemctl restart nginx
+
