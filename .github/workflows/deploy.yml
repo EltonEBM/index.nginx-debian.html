@@ -16,18 +16,18 @@ jobs:
       - name: SSH Anahtarını Ayarla
         run: |
           mkdir -p ~/.ssh
-          echo "$EC2_KEY" > ~/.ssh/id_rsa
+          echo 172.31.6.38 > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
         env:
           EC2_KEY: ${{ vars.EC2_KEY }}
 
       - name: SSH Bilgilerini Onayla
         run: |
-          if [ -z "$EC2_IP" ]; then
-            echo "EC2_IP is not set. Exiting."
+          if [ -z 172.31.6.38 ]; then
+            echo "172.31.6.38 is not set. Exiting."
             exit 1
           fi
-          ssh-keyscan -H $EC2_IP >> ~/.ssh/known_hosts
+          ssh-keyscan -H 172.31.6.38 >> ~/.ssh/known_hosts
         env:
           EC2_IP: ${{ vars.EC2_IP }}
 
