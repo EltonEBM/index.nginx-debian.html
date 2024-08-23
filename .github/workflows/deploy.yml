@@ -19,7 +19,7 @@ jobs:
           echo "$EC2_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
         env:
-          EC2_KEY: ${{ secrets.EC2_KEY }}
+          EC2_KEY: ${{ env.EC2_KEY }}
 
       - name: SSH Bilgilerini Onayla
         run: |
@@ -29,7 +29,7 @@ jobs:
           fi
           ssh-keyscan -H $EC2_IP >> ~/.ssh/known_hosts
         env:
-          EC2_IP: ${{ secrets.EC2_IP }}
+          EC2_IP: ${{ env.EC2_IP }}
 
       - name: EC2'ye Dağıtım
         run: |
