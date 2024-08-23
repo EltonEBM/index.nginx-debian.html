@@ -1,4 +1,4 @@
-name: EC2'ye Dağıtım
+name: Deploy to EC2
 
 on:
   push:
@@ -10,25 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Kodu İndir
+    - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Dosyayı EC2'ye Kopyala
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ssh
+
+    - name: Deploy files to EC2
       uses: appleboy/scp-action@v0.1.0
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         source: "index.nginx-debian.html"
-        target: "/home/ubuntu/"
+        target: "/home/${{ secrets.EC2_USER }}/"
 
-    - name: EC2'ye SSH ile Bağlan ve Dosyayı Taşı
-      uses: appleboy/ssh-action@v0.1.2
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_KEY }}
-        script: |
-          sudo mv /home/ubuntu/index.nginx-debian.html /var/www/html/index.nginx-debian.html
-          sudo systemctl restart nginx
+    - name: Execute remote command on EC2
+      run: |
+        ssh -i ${{ secrets.EC2_KEY }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "sudo mv /home/${{ secrets.EC2_USER }}/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"
+
 
