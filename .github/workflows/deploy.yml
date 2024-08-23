@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: EC2'ye Dağıtım
 
 on:
   push:
@@ -10,40 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Kodu Kontrol Et
+        uses: actions/checkout@v3
 
-    - name: Install SSH Client
-      run: sudo apt-get update && sudo apt-get install -y openssh-client
+      - name: SSH Anahtarını Ayarla
+        run: |
+          mkdir -p ~/.ssh
+          echo "$EC2_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+        env:
+          EC2_KEY: ${{ secrets.EC2_KEY }}
 
-    - name: Create .ssh Directory
-      run: mkdir -p /home/runner/.ssh
+      - name: SSH Bilgilerini Onayla
+        run: |
+          ssh-keyscan -H ${{ secrets.EC2_IP }} >> ~/.ssh/known_hosts
 
-    - name: Add SSH Key
-      env:
-        EC2_KEY: ${{ secrets.EC2_KEY }}
-      run: |
-        echo "$EC2_KEY" > /home/runner/.ssh/id_rsa
-        chmod 600 /home/runner/.ssh/id_rsa
-
-    - name: Add EC2 Host to known_hosts
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-      run: |
-        if [ -z "$EC2_HOST" ]; then
-          echo "EC2_HOST is not set. Exiting."
-          exit 1
-        fi
-        ssh-keyscan -H $EC2_HOST >> /home/runner/.ssh/known_hosts
-
-    - name: Deploy to EC2
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-        EC2_USER: ${{ secrets.EC2_USER }}
-      run: |
-        if [ -z "$EC2_HOST" ] || [ -z "$EC2_USER" ]; then
-          echo "EC2_HOST or EC2_USER is not set. Exiting."
-          exit 1
-        fi
-        scp -i /home/runner/.ssh/id_rsa index.nginx-debian.html $EC2_USER@$EC2_HOST:/home/$EC2_USER/index.nginx-debian.html
-        ssh -i /home/runner/.ssh/id_rsa $EC2_USER@$EC2_HOST "sudo mv /home/$EC2_USER/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"
+      - name: EC2'ye Dağıtım
+        run: |
+          scp -o StrictHostKeyChecking=no index.nginx-debian.html ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }}:/home/${{ secrets.EC2_USER }}/
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_IP }} "sudo mv /home/${{ secrets.EC2_USER }}/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"
+        env:
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_IP: ${{ secrets.EC2_IP }}
