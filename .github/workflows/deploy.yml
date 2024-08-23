@@ -1,3 +1,10 @@
+name: EC2'ye Dağıtım
+
+on:
+  push:
+    branches:
+      - main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,7 +23,6 @@ jobs:
 
       - name: SSH Bilgilerini Onayla
         run: |
-          echo "EC2_IP: $EC2_IP"
           if [ -z "$EC2_IP" ]; then
             echo "EC2_IP is not set. Exiting."
             exit 1
