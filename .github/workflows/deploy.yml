@@ -31,4 +31,3 @@ jobs:
       run: |
         ssh -i ${{ secrets.EC2_KEY }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "sudo mv /home/${{ secrets.EC2_USER }}/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"
 
-
