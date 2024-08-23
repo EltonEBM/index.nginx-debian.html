@@ -22,8 +22,8 @@ jobs:
         EC2_USER: ${{ secrets.EC2_USER }}  # EC2 kullanıcı adı
         EC2_KEY: ${{ secrets.EC2_KEY }}    # SSH özel anahtar
       run: |
-        echo "$EC2_KEY" > /home/runner/.ssh/id_rsa
-        chmod 600 /home/runner/.ssh/id_rsa
-        ssh-keyscan -H $EC2_HOST >> /home/runner/.ssh/known_hosts  # EC2 ana bilgisayarını known_hosts'a ekler.
-        scp -i /home/runner/.ssh/id_rsa index.nginx-debian.html $EC2_USER@$EC2_HOST:/home/$EC2_USER/index.nginx-debian.html  # Dosyayı kopyalar.
-        ssh -i /home/runner/.ssh/id_rsa $EC2_USER@$EC2_HOST "sudo mv /home/$EC2_USER/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"  # Dosyayı taşır ve Nginx'i yeniden başlatır.
+        echo "$EC2_KEY" > /home/ubuntu/.ssh/id_rsa
+        chmod 600 /home/ubuntu/.ssh/id_rsa
+        ssh-keyscan -H $EC2_HOST >> /home/ubuntu/.ssh/known_hosts  # EC2 ana bilgisayarını known_hosts'a ekler.
+        scp -i /home/ubuntu/.ssh/id_rsa index.nginx-debian.html $EC2_USER@$EC2_HOST:/home/$EC2_USER/index.nginx-debian.html  # Dosyayı kopyalar.
+        ssh -i /home/ubuntu/.ssh/id_rsa $EC2_USER@$EC2_HOST "sudo mv /home/$EC2_USER/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"  # Dosyayı taşır ve Nginx'i yeniden başlatır.
