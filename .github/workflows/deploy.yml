@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main
+      - main  # 'main' dalındaki her değişiklikte bu işlem tetiklenir.
 
 jobs:
   deploy:
@@ -11,23 +11,19 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2  # Kodu checkout eder.
 
-    - name: Install dependencies
+    - name: Install SSH Client
+      run: sudo apt-get update && sudo apt-get install -y openssh-client  # SSH client kurar.
+
+    - name: Deploy to EC2
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}  # EC2 IP adresi
+        EC2_USER: ${{ secrets.EC2_USER }}  # EC2 kullanıcı adı
+        EC2_KEY: ${{ secrets.EC2_KEY }}    # SSH özel anahtar
       run: |
-        sudo apt-get update
-        sudo apt-get install -y ssh
-
-    - name: Deploy files to EC2
-      uses: appleboy/scp-action@v0.1.0
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_KEY }}
-        source: "index.nginx-debian.html"
-        target: "/home/${{ secrets.EC2_USER }}/"
-
-    - name: Execute remote command on EC2
-      run: |
-        ssh -i ${{ secrets.EC2_KEY }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "sudo mv /home/${{ secrets.EC2_USER }}/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"
-
+        echo "$EC2_KEY" > /home/runner/.ssh/id_rsa
+        chmod 600 /home/runner/.ssh/id_rsa
+        ssh-keyscan -H $EC2_HOST >> /home/runner/.ssh/known_hosts  # EC2 ana bilgisayarını known_hosts'a ekler.
+        scp -i /home/runner/.ssh/id_rsa index.nginx-debian.html $EC2_USER@$EC2_HOST:/home/$EC2_USER/index.nginx-debian.html  # Dosyayı kopyalar.
+        ssh -i /home/runner/.ssh/id_rsa $EC2_USER@$EC2_HOST "sudo mv /home/$EC2_USER/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"  # Dosyayı taşır ve Nginx'i yeniden başlatır.
