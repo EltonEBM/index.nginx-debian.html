@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main  # 'main' dalındaki her değişiklikte bu işlem tetiklenir.
+      - main
 
 jobs:
   deploy:
@@ -11,19 +11,29 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2  # Kodu checkout eder.
+      uses: actions/checkout@v2
 
     - name: Install SSH Client
-      run: sudo apt-get update && sudo apt-get install -y openssh-client  # SSH client kurar.
+      run: sudo apt-get update && sudo apt-get install -y openssh-client
 
+    # .ssh Dizini Yaratma
+    - name: Create .ssh Directory
+      run: mkdir -p /home/runner/.ssh
+
+    # SSH Anahtarını Yaratma ve İzin Ayarlama
+    - name: Add SSH Key
+      env:
+        EC2_KEY: ${{ secrets.EC2_KEY }}
+      run: |
+        echo "$EC2_KEY" > /home/runner/.ssh/id_rsa
+        chmod 600 /home/runner/.ssh/id_rsa
+
+    # EC2 Sunucusuna Bağlanma ve Dosya Aktarımı
     - name: Deploy to EC2
       env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}  # EC2 IP adresi
-        EC2_USER: ${{ secrets.EC2_USER }}  # EC2 kullanıcı adı
-        EC2_KEY: ${{ secrets.EC2_KEY }}    # SSH özel anahtar
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USER: ${{ secrets.EC2_USER }}
       run: |
-        echo "$EC2_KEY" > /home/ubuntu/.ssh/id_rsa
-        chmod 600 /home/ubuntu/.ssh/id_rsa
-        ssh-keyscan -H $EC2_HOST >> /home/ubuntu/.ssh/known_hosts  # EC2 ana bilgisayarını known_hosts'a ekler.
-        scp -i /home/ubuntu/.ssh/id_rsa index.nginx-debian.html $EC2_USER@$EC2_HOST:/home/$EC2_USER/index.nginx-debian.html  # Dosyayı kopyalar.
-        ssh -i /home/ubuntu/.ssh/id_rsa $EC2_USER@$EC2_HOST "sudo mv /home/$EC2_USER/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"  # Dosyayı taşır ve Nginx'i yeniden başlatır.
+        ssh-keyscan -H $EC2_HOST >> /home/runner/.ssh/known_hosts
+        scp -i /home/runner/.ssh/id_rsa index.nginx-debian.html $EC2_USER@$EC2_HOST:/home/$EC2_USER/index.nginx-debian.html
+        ssh -i /home/runner/.ssh/id_rsa $EC2_USER@$EC2_HOST "sudo mv /home/$EC2_USER/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"
