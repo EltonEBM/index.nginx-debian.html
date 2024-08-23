@@ -16,25 +16,20 @@ jobs:
       - name: SSH Anahtarını Ayarla
         run: |
           mkdir -p ~/.ssh
-          echo 172.31.6.38 > ~/.ssh/id_rsa
+          echo "$EC2_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
         env:
-          EC2_KEY: ${{ vars.EC2_KEY }}
+          EC2_KEY: ${{ secrets.EC2_KEY }}  # Doğru değişkeni kullandığınızdan emin olun
 
       - name: SSH Bilgilerini Onayla
         run: |
-          if [ -z 172.31.6.38 ]; then
-            echo "172.31.6.38 is not set. Exiting."
-            exit 1
-          fi
-          ssh-keyscan -H 172.31.6.38 >> ~/.ssh/known_hosts
+          ssh-keyscan -H 172.31.6.38 >> ~/.ssh/known_hosts  # IP sabitse, -z kontrolüne gerek yok
         env:
-          EC2_IP: ${{ vars.EC2_IP }}
+          EC2_IP: 172.31.6.38  # IP adresi sabit olduğundan bu satır aslında gerekli değil
 
       - name: EC2'ye Dağıtım
         run: |
-          scp -o StrictHostKeyChecking=no index.nginx-debian.html ${{ secrets.EC2_USER }}@$EC2_IP:/home/${{ secrets.EC2_USER }}/
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@$EC2_IP "sudo mv /home/${{ secrets.EC2_USER }}/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"
+          scp -o StrictHostKeyChecking=no index.nginx-debian.html ${{ secrets.EC2_USER }}@172.31.6.38:/home/${{ secrets.EC2_USER }}/
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@172.31.6.38 "sudo mv /home/${{ secrets.EC2_USER }}/index.nginx-debian.html /var/www/html/index.nginx-debian.html && sudo systemctl restart nginx"
         env:
-          EC2_USER: ${{ vars.EC2_USER }}
-          EC2_IP: ${{ vars.EC2_IP }}
+          EC2_USER: ${{ secrets.EC2_USER }}  # Doğru değişkeni kullandığınızdan emin olun
